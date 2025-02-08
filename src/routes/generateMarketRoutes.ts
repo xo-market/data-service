@@ -5,10 +5,10 @@ import { getMarket } from "../utils/gemini";
 const router = Router();
 
 /**
- * POST /generate-market
- * Accept cash_hash and return market response.
+ * POST /generate-market/farcaster
+ * Accept cast_hash and return market response.
  */
-router.post("/", async (req: any, res: any) => {
+router.post("/farcaster", async (req: any, res: any) => {
   try {
     const {cast_hash} = req.body;
     if (!cast_hash) {
