@@ -1,13 +1,24 @@
 import { agenda } from './agenda';
 
-interface VerifyFarcasterLikesData {
+interface ResolveFarcasterMarket {
     cast_hash: string;
     market_id: string;
 }
 
-agenda.define('verifyFarcasterLikes', async (job) => {
-    const { cast_hash, market_id } = job.attrs.data as VerifyFarcasterLikesData;
-    // dummy delay to simulate likes verification
-    await new Promise(res => setTimeout(res, 2000));
-    console.log(`Verified that cast ${cast_hash} has enough liked for market: "${market_id}"`);
+agenda.define('resolveFarcasterLikes', async (job) => {
+    // TODO
+    const { cast_hash, market_id } = job.attrs.data as ResolveFarcasterMarket;
+    console.log(`Resolve Market : ${market_id} for the cast ${cast_hash} has enough likes`);
+});
+
+agenda.define('resolveFarcasterRecasts', async (job) => {
+    //TODO
+    const { cast_hash, market_id } = job.attrs.data as ResolveFarcasterMarket;
+    console.log(`Resolve Market : ${market_id} for the cast ${cast_hash} has enough replies`);
+});
+
+agenda.define('resolveFarcasterReplies', async (job) => {
+    //TODO
+    const { cast_hash, market_id } = job.attrs.data as ResolveFarcasterMarket;
+    console.log(`Resolve Market : ${market_id} for the cast ${cast_hash} has enough recasts`);
 });
