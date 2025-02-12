@@ -2,7 +2,6 @@ import { Router, Request, Response } from "express";
 import { PinataSDK } from "pinata-web3";
 import { fetchFarcasterCast } from "../providers/farcaster";
 import { agenda } from "../resolvers/agenda";
-import "../resolvers/farcaster";
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_JWT,
