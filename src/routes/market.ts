@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { PinataSDK } from "pinata-web3";
 import { fetchFarcasterCast } from "../providers/farcaster";
 import { agenda } from "../resolvers/agenda";
+import { upload } from "../fileUpload";
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_JWT,
@@ -196,6 +197,40 @@ router.post("/create/farcaster", async (req: any, res: any) => {
   }
 });
 
+
+/**
+ * @route POST /upload
+ * @description Upload image to ipfs and return the image link.
+ * @param {file} file - file to upload.
+ * @returns {Object} JSON response with success boolean, image link .
+ */
+router.post("/upload", upload, async (req: any, res: any) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    const file = new File(
+      [req.file.buffer],
+      req.file.originalname,
+      { type: req.file.mimetype }
+    );
+
+    const upload_result = await pinata.upload.file(file);
+
+    return res.json({
+      success: true,
+      image_link: `https://gateway.pinata.cloud/ipfs/${upload_result.IpfsHash}`
+
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return res.status(500).json({
+      error: 'Error uploading to IPFS',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+})
 
 /**
  * @route GET /ipfs/:hash
