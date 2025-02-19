@@ -1,0 +1,18 @@
+type Market @entity {
+  id: ID!
+  marketId: ID!
+  creator:String!
+  startsAt:String!
+  expiresAt:String!
+  collateralToken:String!
+  outcomeCount:Int!
+  metaDataURI:String!
+  txnHash:String!
+}
+
+type MarketPrice @entity {
+  id: ID!
+  marketId: String!
+  outcomePrices: [String!]!
+  txnHash:String!
+}
