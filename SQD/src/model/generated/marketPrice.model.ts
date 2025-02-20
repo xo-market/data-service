@@ -1,4 +1,4 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_} from "@subsquid/typeorm-store"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, StringColumn as StringColumn_, FloatColumn as FloatColumn_} from "@subsquid/typeorm-store"
 
 @Entity_()
 export class MarketPrice {
@@ -17,4 +17,7 @@ export class MarketPrice {
 
     @StringColumn_({nullable: false})
     txnHash!: string
+
+    @FloatColumn_({nullable: false})
+    timestamp!: number
 }

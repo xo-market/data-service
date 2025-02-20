@@ -27,9 +27,7 @@ processor.run(db, async (ctx) => {
   let marketPrices: MarketPrice[] = []
 
   for (let block of ctx.blocks) {
-    ctx.log.info(block.logs)
     for (let log of block.logs) {
-      ctx.log.info(log.address)
 
       if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase() &&
         log.topics[0] === marketAbi.events.MarketCreated.topic) {
@@ -55,7 +53,8 @@ processor.run(db, async (ctx) => {
           id: log.id,
           marketId: marketId.toString(),
           outcomePrices: outcomePrices.map(price => price.toString()),
-          txnHash: log.transactionHash
+          txnHash: log.transactionHash,
+          timestamp:block.header.timestamp
         }))
 
       }

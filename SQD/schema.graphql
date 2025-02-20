@@ -15,4 +15,5 @@ type MarketPrice @entity {
   marketId: String!
   outcomePrices: [String!]!
   txnHash:String!
+  timestamp:Float!
 }
