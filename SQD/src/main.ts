@@ -12,7 +12,7 @@ const processor = new EvmBatchProcessor()
   .addLog({
     range: { from: 1989045 },
     address: [MARKET_CONTRACT_ADDRESS],
-    topic0: [marketAbi.events.MarketCreated.topic],
+    topic0: [marketAbi.events.MarketCreated.topic,marketAbi.events.MarketPriceChanged.topic],
   })
   .setFields({
     log: {
