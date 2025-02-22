@@ -3,6 +3,7 @@ import { EvmBatchProcessor } from '@subsquid/evm-processor'
 import { TypeormDatabase } from '@subsquid/typeorm-store'
 import * as marketAbi from './abi/market'
 import { Market, MarketPrice } from './model'
+import { extractMarketMetaData, MarketMetaData } from "./utils"
 
 const MARKET_CONTRACT_ADDRESS =process.env.MARKET_CONTRACT || ""
 
@@ -32,6 +33,11 @@ processor.run(db, async (ctx) => {
       if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase() &&
         log.topics[0] === marketAbi.events.MarketCreated.topic) {
         let { marketId, creator, startsAt, expiresAt, collateralToken, outcomeCount, metaDataURI } = marketAbi.events.MarketCreated.decode(log)
+        let meta_data: MarketMetaData | null = await extractMarketMetaData(metaDataURI)
+        if (!meta_data) {
+          console.log("Invalid meta data")
+          return
+        }
         markets.push(new Market({
           id: log.id,
           marketId: marketId.toString(),
@@ -41,6 +47,16 @@ processor.run(db, async (ctx) => {
           collateralToken,
           outcomeCount,
           metaDataURI,
+          name: meta_data.name,
+          description: meta_data.description,
+          image: meta_data.image,
+          category: meta_data.category,
+          type: meta_data.type,
+          tags: meta_data.tags,
+          rules: meta_data.rules,
+          externalURL: meta_data.external_url,
+          animationURL: meta_data.animation_url,
+          backgroundColor: meta_data.background_color,
           txnHash: log.transactionHash
         }))
       }

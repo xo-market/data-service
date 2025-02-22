@@ -6,6 +6,16 @@ type Market @entity {
   expiresAt:String!
   collateralToken:String!
   outcomeCount:Int!
+  name:String!
+  description:String!
+  image:String!
+  category:String!
+  type:String!
+  tags:[String!]!
+  rules:String!
+  externalURL:String!
+  animationURL:String!
+  backgroundColor:String!
   metaDataURI:String!
   txnHash:String!
 }

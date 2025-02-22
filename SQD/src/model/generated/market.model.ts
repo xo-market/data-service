@@ -28,6 +28,36 @@ export class Market {
     outcomeCount!: number
 
     @StringColumn_({nullable: false})
+    name!: string
+
+    @StringColumn_({nullable: false})
+    description!: string
+
+    @StringColumn_({nullable: false})
+    image!: string
+
+    @StringColumn_({nullable: false})
+    category!: string
+
+    @StringColumn_({nullable: false})
+    type!: string
+
+    @StringColumn_({array: true, nullable: false})
+    tags!: (string)[]
+
+    @StringColumn_({nullable: false})
+    rules!: string
+
+    @StringColumn_({nullable: false})
+    externalURL!: string
+
+    @StringColumn_({nullable: false})
+    animationURL!: string
+
+    @StringColumn_({nullable: false})
+    backgroundColor!: string
+
+    @StringColumn_({nullable: false})
     metaDataURI!: string
 
     @StringColumn_({nullable: false})
