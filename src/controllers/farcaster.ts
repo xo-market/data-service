@@ -10,13 +10,14 @@ import { pinata } from "../utils/pinata";
  * @param {Date} expiry - expiration date of the market.
  * @param {string} settlement_factor - one of the settlement factor :"likes", "recasts", "replies".
  * @param {number} count - count of likes or recasts, or replies required for the market to be valid.
+ * @param {number} winning_outcome - winning outcome of the market.
  * @returns {Object} JSON response with success boolean and message.
  */
 export const scheduleFarcasterMarket = async (req: any, res: any) => {
     try {
-        const { market_id, cast_hash, expiry, settlement_factor, count } = req.body;
+        const { market_id, cast_hash, expiry, settlement_factor, count, winning_outcome } = req.body;
 
-        if (!market_id || !cast_hash || !expiry || !settlement_factor || !count) {
+        if (!market_id || !cast_hash || !expiry || !settlement_factor || !count || winning_outcome != null) {
             return res.status(400).json({ success: false, error: "Missing required fields" });
         }
 
@@ -34,25 +35,23 @@ export const scheduleFarcasterMarket = async (req: any, res: any) => {
                 if (cast_response.likes_count >= count) {
                     return res.status(400).json({ success: false, message: `Cast already has ${count} or more likes.` });
                 }
-                await agenda.schedule(expiration_date, 'resolveFarcasterLikes', { market_id, cast_hash });
+                await agenda.schedule(expiration_date, 'resolveFarcasterLikes', { market_id, cast_hash, count, winning_outcome });
                 break;
             case "recasts":
                 if (cast_response.recasts_count >= count) {
                     return res.status(400).json({ success: false, message: `Cast already has ${count} or more recasts.` });
                 }
-                await agenda.schedule(expiration_date, 'resolveFarcasterRecasts', { market_id, cast_hash });
+                await agenda.schedule(expiration_date, 'resolveFarcasterRecasts', { market_id, cast_hash, count, winning_outcome });
                 break;
             case "replies":
                 if (cast_response.replies >= count) {
                     return res.status(400).json({ success: false, message: `Cast already has ${count} or more replies.` });
                 }
-                await agenda.schedule(expiration_date, 'resolveFarcasterReplies', { market_id, cast_hash });
+                await agenda.schedule(expiration_date, 'resolveFarcasterReplies', { market_id, cast_hash, count, winning_outcome });
                 break;
             default:
                 return res.status(400).json({ success: false, error: "Invalid settlement factor" });
         }
-
-
 
         return res.json({
             success: true,
@@ -85,7 +84,6 @@ export const validateFarcasterMarket = async (req: any, res: any) => {
         if (!cast_response) {
             return res.status(400).json({ success: false, error: "Invalid cast hash" });
         }
-
 
         switch (settlement_factor) {
             case "likes":
