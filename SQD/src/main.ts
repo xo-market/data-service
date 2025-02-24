@@ -2,18 +2,18 @@ import "dotenv/config"
 import { EvmBatchProcessor } from '@subsquid/evm-processor'
 import { TypeormDatabase } from '@subsquid/typeorm-store'
 import * as marketAbi from './abi/market'
-import { Market, MarketPrice } from './model'
+import { Market, MarketPrice, UserTransactions } from './model'
 import { extractMarketMetaData, MarketMetaData } from "./utils"
 
-const MARKET_CONTRACT_ADDRESS =process.env.MARKET_CONTRACT || ""
+const MARKET_CONTRACT_ADDRESS = process.env.MARKET_CONTRACT || ""
 
 const processor = new EvmBatchProcessor()
   .setRpcEndpoint(process.env.RPC_URL)
   .setFinalityConfirmation(5)
   .addLog({
-    range: { from: 1989045 },
+    range: { from: 2315809 },
     address: [MARKET_CONTRACT_ADDRESS],
-    topic0: [marketAbi.events.MarketCreated.topic,marketAbi.events.MarketPriceChanged.topic],
+    topic0: [marketAbi.events.MarketCreated.topic, marketAbi.events.MarketPriceChanged.topic, marketAbi.events.MarketResolved.topic, marketAbi.events.OutcomeTokensBought.topic, marketAbi.events.OutcomeTokensSold.topic, marketAbi.events.CollateralRedeemed.topic],
   })
   .setFields({
     log: {
@@ -26,56 +26,127 @@ const db = new TypeormDatabase({ supportHotBlocks: true })
 processor.run(db, async (ctx) => {
   let markets: Market[] = []
   let marketPrices: MarketPrice[] = []
+  let userTransactions: UserTransactions[] = []
 
   for (let block of ctx.blocks) {
     for (let log of block.logs) {
-
-      if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase() &&
-        log.topics[0] === marketAbi.events.MarketCreated.topic) {
-        let { marketId, creator, startsAt, expiresAt, collateralToken, outcomeCount, metaDataURI } = marketAbi.events.MarketCreated.decode(log)
-        let meta_data: MarketMetaData | null = await extractMarketMetaData(metaDataURI)
-        if (!meta_data) {
-          console.log("Invalid meta data")
-          return
+      console.log(log.topics);
+      if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase()) {
+        if (log.topics[0] === marketAbi.events.MarketCreated.topic) {
+          let { marketId, creator, startsAt, expiresAt, collateralToken, outcomeCount, metaDataURI } = marketAbi.events.MarketCreated.decode(log)
+          let meta_data: MarketMetaData | null = await extractMarketMetaData(metaDataURI)
+          if (!meta_data) {
+            console.log("Invalid meta data")
+            return
+          }
+          markets.push(new Market({
+            id: log.id,
+            marketId: marketId.toString(),
+            creator,
+            startsAt: startsAt.toString(),
+            expiresAt: expiresAt.toString(),
+            collateralToken,
+            outcomeCount,
+            metaDataURI,
+            name: meta_data.name,
+            description: meta_data.description,
+            image: meta_data.image,
+            category: meta_data.category,
+            type: meta_data.type,
+            tags: meta_data.tags,
+            rules: meta_data.rules,
+            externalURL: meta_data.external_url,
+            animationURL: meta_data.animation_url,
+            backgroundColor: meta_data.background_color,
+            txnHash: log.transactionHash
+          }))
         }
-        markets.push(new Market({
-          id: log.id,
-          marketId: marketId.toString(),
-          creator,
-          startsAt: startsAt.toString(),
-          expiresAt: expiresAt.toString(),
-          collateralToken,
-          outcomeCount,
-          metaDataURI,
-          name: meta_data.name,
-          description: meta_data.description,
-          image: meta_data.image,
-          category: meta_data.category,
-          type: meta_data.type,
-          tags: meta_data.tags,
-          rules: meta_data.rules,
-          externalURL: meta_data.external_url,
-          animationURL: meta_data.animation_url,
-          backgroundColor: meta_data.background_color,
-          txnHash: log.transactionHash
-        }))
-      }
 
-      if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase() &&
-        log.topics[0] === marketAbi.events.MarketPriceChanged.topic) {
-        let { marketId, outcomePrices } = marketAbi.events.MarketPriceChanged.decode(log)
+        if (log.topics[0] === marketAbi.events.MarketPriceChanged.topic) {
+          let { marketId, outcomePrices } = marketAbi.events.MarketPriceChanged.decode(log)
 
-        marketPrices.push(new MarketPrice({
-          id: log.id,
-          marketId: marketId.toString(),
-          outcomePrices: outcomePrices.map(price => price.toString()),
-          txnHash: log.transactionHash,
-          timestamp:block.header.timestamp
-        }))
+          marketPrices.push(new MarketPrice({
+            id: log.id,
+            marketId: marketId.toString(),
+            outcomePrices: outcomePrices.map(price => price.toString()),
+            txnHash: log.transactionHash,
+            timestamp: block.header.timestamp
+          }))
+        }
 
+        if (log.topics[0] === marketAbi.events.OutcomeTokensBought.topic) {
+          let { marketId, buyer, outcome, amount, cost } = marketAbi.events.OutcomeTokensBought.decode(log)
+          userTransactions.push(new UserTransactions({
+            id: log.id,
+            userAddress: buyer,
+            marketId: marketId.toString(),
+            outcome: outcome,
+            quantity: amount,
+            totalAmount: cost,
+            type: "buy",
+            isClaimable: false,
+            isExpired: false,
+            isRedeemed: false,
+            txnHash: log.transactionHash,
+            timestamp: block.header.timestamp
+          }))
+        }
+
+        if (log.topics[0] === marketAbi.events.OutcomeTokensSold.topic) {
+          let { marketId, seller, outcome, amount, received } = marketAbi.events.OutcomeTokensSold.decode(log)
+          userTransactions.push(new UserTransactions({
+            id: log.id,
+            userAddress: seller,
+            marketId: marketId.toString(),
+            outcome: outcome,
+            quantity: amount,
+            totalAmount: received,
+            type: "buy",
+            isClaimable: false,
+            isExpired: false,
+            isRedeemed: false,
+            txnHash: log.transactionHash,
+            timestamp: block.header.timestamp
+          }))
+        }
+
+        if (log.topics[0] === marketAbi.events.MarketResolved.topic) {
+          let { marketId, resolver, winningTokenId } = marketAbi.events.MarketResolved.decode(log)
+          let marketSpecificRecords = await ctx.store.find(UserTransactions, {
+            where: {
+              marketId: marketId.toString(),
+            }
+          });
+
+          for (let record of marketSpecificRecords) {
+            record.isExpired = true;
+            if (record.outcome === Number(winningTokenId)) {
+              record.isClaimable = true;
+            }
+          }
+          await ctx.store.save(marketSpecificRecords);
+
+        }
+
+        if (log.topics[0] === marketAbi.events.CollateralRedeemed.topic) {
+          let { marketId, redeemer, amount } = marketAbi.events.CollateralRedeemed.decode(log)
+          let redeemedTransactions = await ctx.store.find(UserTransactions, {
+            where: {
+              marketId: marketId.toString(),
+              userAddress: redeemer,
+            }
+          });
+
+          for (let record of redeemedTransactions) {
+            record.isRedeemed = true;
+          }
+          await ctx.store.save(redeemedTransactions);
+
+        }
       }
     }
   }
   await ctx.store.insert(markets)
   await ctx.store.insert(marketPrices)
+  await ctx.store.insert(userTransactions)
 })

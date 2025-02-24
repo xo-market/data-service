@@ -27,3 +27,19 @@ type MarketPrice @entity {
   txnHash:String!
   timestamp:Float!
 }
+ 
+
+type UserTransactions @entity {
+  id: ID!
+  userAddress: String!
+  marketId: String!
+  outcome: Int!
+  quantity: BigInt!
+  totalAmount: BigInt!
+  type: String!
+  isClaimable: Boolean!
+  isExpired: Boolean!
+  isRedeemed: Boolean!
+  txnHash: String!
+  timestamp: Float!
+}
