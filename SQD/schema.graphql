@@ -29,17 +29,26 @@ type MarketPrice @entity {
 }
  
 
-type UserTransactions @entity {
+type UserActivity @entity {
   id: ID!
   userAddress: String!
   marketId: String!
-  outcome: Int!
-  quantity: BigInt!
-  totalAmount: BigInt!
-  type: String!
-  isClaimable: Boolean!
-  isExpired: Boolean!
-  isRedeemed: Boolean!
+  action: String!
+  outcome: Int
+  quantity: BigInt
+  totalAmount: BigInt
   txnHash: String!
   timestamp: Float!
+}
+
+type UserMarketData @entity {
+  id: ID!
+  userAddress: String!
+  marketId: String!
+  isRedeemed: Boolean!
+  isClaimable: Boolean!
+  isExpired: Boolean!
+  outcome: Int!
+  winingOutcome: Int
+  quantity: BigInt!
 }
