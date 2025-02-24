@@ -11,7 +11,7 @@ const processor = new EvmBatchProcessor()
   .setRpcEndpoint(process.env.RPC_URL)
   .setFinalityConfirmation(5)
   .addLog({
-    range: { from: 1989045 },
+    range: { from: 2307120 },
     address: [MARKET_CONTRACT_ADDRESS],
     topic0: [marketAbi.events.MarketCreated.topic,marketAbi.events.MarketPriceChanged.topic],
   })
@@ -30,6 +30,7 @@ processor.run(db, async (ctx) => {
   for (let block of ctx.blocks) {
     for (let log of block.logs) {
 
+      console.log("Processing Block". log.block.id);
       if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase() &&
         log.topics[0] === marketAbi.events.MarketCreated.topic) {
         let { marketId, creator, startsAt, expiresAt, collateralToken, outcomeCount, metaDataURI } = marketAbi.events.MarketCreated.decode(log)
