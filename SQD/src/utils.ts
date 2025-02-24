@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'; // Only needed for Node.js environments
+import { ethers } from 'ethers';
 
 export interface MarketMetaData {
   name: string;
@@ -68,3 +69,35 @@ export async function extractMarketMetaData(ipfs_url: string): Promise<MarketMet
   }
 }
 
+
+/**
+ * Queries the getMarketCollateral function on the blockchain
+ * @param contractAddress - Address of the market contract
+ * @param marketId - ID of the market to query
+ * @param rpcUrl - URL of the RPC provider
+ * @returns Promise resolving to the market collateral as a BigInt
+ */
+export async function getMarketCollateral(
+  contractAddress: string,
+  marketId: bigint | number | string,
+  rpcUrl: string
+): Promise<bigint> {
+  try {
+    // Create provider and interface
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const iface = new ethers.Interface([
+      'function getMarketCollateral(uint256 marketId) view returns (uint256)'
+    ]);
+    
+    // Create contract instance
+    const contract = new ethers.Contract(contractAddress, iface, provider);
+    
+    // Call the function and wait for result
+    const collateral = await contract.getMarketCollateral(marketId);
+    
+    return collateral;
+  } catch (error) {
+    console.error(`Error querying getMarketCollateral for market ${marketId}:`, error);
+    throw error;
+  }
+}

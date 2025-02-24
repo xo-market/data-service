@@ -3,7 +3,7 @@ import { EvmBatchProcessor } from '@subsquid/evm-processor'
 import { TypeormDatabase } from '@subsquid/typeorm-store'
 import * as marketAbi from './abi/market'
 import { Market, MarketPrice, UserActivity, UserMarketData } from './model'
-import { extractMarketMetaData, MarketMetaData } from "./utils"
+import { extractMarketMetaData, getMarketCollateral, MarketMetaData } from "./utils"
 import { randomUUID } from "crypto"
 
 const MARKET_CONTRACT_ADDRESS = process.env.MARKET_CONTRACT || ""
@@ -40,6 +40,13 @@ processor.run(db, async (ctx) => {
           console.log("Invalid meta data")
           return
         }
+        const collateral = await getMarketCollateral(
+          MARKET_CONTRACT_ADDRESS,
+          marketId.toString(),
+          process.env.RPC_URL || ''
+        );
+        console.log(`Market collateral: ${collateral}`);
+        
         await ctx.store.insert(new Market({
           id: randomUUID(),
           marketId: marketId.toString(),
@@ -66,7 +73,7 @@ processor.run(db, async (ctx) => {
           userAddress: creator,
           marketId: marketId.toString(),
           outcome: undefined,
-          quantity: undefined,
+          quantity: collateral,
           totalAmount: undefined,
           action: "create-market",
           txnHash: log.transactionHash,
@@ -82,7 +89,7 @@ processor.run(db, async (ctx) => {
             isExpired: false,
             outcome: i,
             winingOutcome: undefined,
-            quantity: BigInt(0), // fetch the quantity from the contract
+            quantity: collateral,
           }))
         }
        
