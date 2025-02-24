@@ -30,7 +30,7 @@ processor.run(db, async (ctx) => {
   for (let block of ctx.blocks) {
     for (let log of block.logs) {
 
-      console.log("Processing Block". log.block.id);
+      console.log("Processing Block", log.block.id);
       if (log.address === MARKET_CONTRACT_ADDRESS.toLowerCase() &&
         log.topics[0] === marketAbi.events.MarketCreated.topic) {
         let { marketId, creator, startsAt, expiresAt, collateralToken, outcomeCount, metaDataURI } = marketAbi.events.MarketCreated.decode(log)
