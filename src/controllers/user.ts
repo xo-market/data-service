@@ -29,7 +29,7 @@ export const getUserActivity = async (req: any, res: any) => {
  * @param {string} userAddress - User address.
  * @returns {Object} JSON response containing list of user market.
  */
-export const getCurremtUserMarketData = async (req: any, res: any) => {
+export const getCurrentUserMarketData = async (req: any, res: any) => {
     try {
         const { userAddress } = req.params;
         if (!userAddress) {
@@ -52,7 +52,7 @@ export const getCurremtUserMarketData = async (req: any, res: any) => {
 
         return res.json({ success: true, data: user_activities });
     } catch (error: any) {
-        console.error("Error Fetching User Activity:", error);
+        console.error("Error Fetching Current User Market Data:", error);
         return res.status(500).json({ success: false, error: error.message });
     }
 }
@@ -89,7 +89,35 @@ export const getPastUserMarketData = async (req: any, res: any) => {
 
         return res.json({ success: true, data: user_activities });
     } catch (error: any) {
-        console.error("Error Fetching User Activity:", error);
+        console.error("Error Fetching Past User Market Data:", error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+}
+
+/**
+ * @route GET /user/leaderboard
+ * @description Returns leaderbaord of user.
+ * @returns {Object} JSON response containing user leaderbaord.
+ */
+export const getUserLeaderboard = async (req: any, res: any) => {
+    try {
+        let PRICE_MULTIPLIER = 5;
+        let userStats = await query(
+            `SELECT 
+                user_address, 
+                COUNT(DISTINCT market_id) AS markets,
+                SUM(quantity) AS total_volume,
+                SUM(quantity) / 1000000000000000000 * $1 AS points,
+                COUNT(CASE WHEN is_claimable = TRUE AND is_expired = TRUE THEN 1 END) AS wins,
+                COUNT(CASE WHEN is_claimable = FALSE AND is_expired = TRUE THEN 1 END) AS losses
+             FROM user_market_data
+             GROUP BY user_address`,
+            [PRICE_MULTIPLIER]
+        );
+
+        return res.json({ success: true, data: userStats });
+    } catch (error: any) {
+        console.error("Error Fetching leaderboard:", error);
         return res.status(500).json({ success: false, error: error.message });
     }
 }
