@@ -33,6 +33,7 @@ processor.run(db, async (ctx) => {
       if (log.address !== MARKET_CONTRACT_ADDRESS.toLowerCase()) {
         return
       }
+      console.log("Processing Block", log.block.id);
       if (log.topics[0] === marketAbi.events.MarketCreated.topic) {
         let { marketId, creator, startsAt, expiresAt, collateralToken, outcomeCount, metaDataURI } = marketAbi.events.MarketCreated.decode(log)
         let meta_data: MarketMetaData | null = await extractMarketMetaData(metaDataURI)
