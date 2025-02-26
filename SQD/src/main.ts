@@ -12,7 +12,7 @@ const processor = new EvmBatchProcessor()
   .setRpcEndpoint(process.env.RPC_URL)
   .setFinalityConfirmation(5)
   .addLog({
-    range: { from: 2429963 },
+    range: { from: 2584681 },
     address: [MARKET_CONTRACT_ADDRESS],
     topic0: [marketAbi.events.MarketCreated.topic, marketAbi.events.MarketPriceChanged.topic, marketAbi.events.MarketResolved.topic, marketAbi.events.OutcomeTokensBought.topic, marketAbi.events.OutcomeTokensSold.topic, marketAbi.events.CollateralRedeemed.topic],
   })
@@ -44,7 +44,8 @@ processor.run(db, async (ctx) => {
         const collateral = await getMarketCollateral(
           MARKET_CONTRACT_ADDRESS,
           marketId.toString(),
-          process.env.RPC_URL || ''
+          process.env.RPC_URL || '',
+          block.header.height
         );
         console.log(`Market collateral: ${collateral}`);
         

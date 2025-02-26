@@ -38,10 +38,36 @@ async function fetchData(url: string): Promise<MarketAPIResponse | null> {
     return null;
   }
 }
+function formatIPFSUrl(ipfsValue: string): string {
+  const ipfsGateway = "https://gateway.pinata.cloud/ipfs/";
+  
+  // If it's already a complete HTTP URL, return it as is
+  if (ipfsValue.startsWith('http://') || ipfsValue.startsWith('https://')) {
+    return ipfsValue;
+  }
+  
+  // If it's an ipfs:// protocol URL, convert it to Pinata gateway URL
+  if (ipfsValue.startsWith('ipfs://')) {
+    return ipfsGateway + ipfsValue.substring(7);
+  }
+  
+  // Clean the hash by removing any prefixes if they exist
+  let hash = ipfsValue;
+  if (hash.startsWith('ipfs/')) {
+    hash = hash.substring(5);
+  }
+  if (hash.startsWith('/ipfs/')) {
+    hash = hash.substring(6);
+  }
+  
+  // Assume it's just a hash and convert to Pinata gateway URL
+  return ipfsGateway + hash;
+}
 
 export async function extractMarketMetaData(ipfs_url: string): Promise<MarketMetaData | null> {
   try {
-    const data = await fetchData(ipfs_url);
+    let ipfs_url_ = formatIPFSUrl(ipfs_url);
+    const data = await fetchData(ipfs_url_);
     if (!data) {
       throw new Error('Invalid JSON response');
     }
@@ -75,12 +101,14 @@ export async function extractMarketMetaData(ipfs_url: string): Promise<MarketMet
  * @param contractAddress - Address of the market contract
  * @param marketId - ID of the market to query
  * @param rpcUrl - URL of the RPC provider
+ * @param blockHeight (optional) - query the function at a specific block height
  * @returns Promise resolving to the market collateral as a BigInt
  */
 export async function getMarketCollateral(
   contractAddress: string,
   marketId: bigint | number | string,
-  rpcUrl: string
+  rpcUrl: string,
+  blockHeight?: number
 ): Promise<bigint> {
   try {
     // Create provider and interface
@@ -92,8 +120,9 @@ export async function getMarketCollateral(
     // Create contract instance
     const contract = new ethers.Contract(contractAddress, iface, provider);
     
-    // Call the function and wait for result
-    const collateral = await contract.getMarketCollateral(marketId);
+    // Call the function with specific block height if provided
+    const overrides = blockHeight ? { blockTag: blockHeight } : {};
+    const collateral = await contract.getMarketCollateral(marketId, overrides);
     
     return collateral;
   } catch (error) {
