@@ -18,7 +18,7 @@ export const scheduleFarcasterMarket = async (req: any, res: any) => {
     try {
         const { market_id, cast_url, expiry, settlement_factor, count, winning_outcome } = req.body;
 
-        if (!market_id || !cast_url || !expiry || !settlement_factor || !count || winning_outcome != null) {
+        if (!market_id || !cast_url || !expiry || !settlement_factor || !count || !winning_outcome) {
             return res.status(400).json({ success: false, error: "Missing required fields" });
         }
 
