@@ -187,3 +187,27 @@ export const createFarcasterMarket = async (req: any, res: any) => {
         return res.status(500).json({ success: false, error: error.message || "Internal server error" });
     }
 }
+
+
+/**
+* @route GET /farcaster/cast
+* @description Returns Farcaster cast detail.
+* @param {string} cast_url - Farcaster cast_url.
+* @returns {Object} JSON cast detail.
+*/
+export const getfarcasterCastDetail = async (req: any, res: any) => {
+    try {
+        const { cast_url } = req.query;
+        if (!cast_url) {
+            return res.status(400).json({ success: false, error: "Missing cast_url" });
+        }
+        let cast_deatail = await getFarcasterPost(cast_url);
+        if (!cast_deatail) {
+            return res.status(400).json({ success: false, error: "Invalid cast hash" });
+        }
+        return res.json({ success: true, cast: cast_deatail.cast });
+    } catch (error: any) {
+        console.error("Error Fetching Market Prices:", error);
+        return res.status(500).json({ success: false, error: error.message });
+    }
+}
