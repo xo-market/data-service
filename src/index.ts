@@ -1,20 +1,26 @@
 import "dotenv/config"; // Loads .env variables if present
 import express, { Request, Response } from "express";
 const cors = require('cors');
-import marketMetadataRoutes from "./routes/marketMetadata";
+import marketRoutes from "./routes/market";
+import ipFsRoutes from "./routes/ipfs";
+import userRoutes from "./routes/user";
+import farcasterRoutes from "./routes/farcaster";
+import faucetRoutes from "./routes/faucet";
+
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Root endpoint
 app.get("/", (req: Request, res: Response) => {
   res.json({ status: "OK", message: "Hello XO Market!" });
 });
 
-// NFT routes
-app.use("/market/metadata", marketMetadataRoutes);
+app.use("/market", marketRoutes);
+app.use("/ipfs", ipFsRoutes);
+app.use("/user", userRoutes);
+app.use("/farcaster", farcasterRoutes);
+app.use("/faucet", faucetRoutes);
 
 export default app;
